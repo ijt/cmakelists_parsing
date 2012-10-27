@@ -37,15 +37,21 @@ except ImportError:
 
 ENCODING = 'utf-8'
 
+File = namedtuple('File', 'commands_and_comments')
+Comment = namedtuple('Comment', 'contents')
+Command = namedtuple('Command', 'name', 'args_and_inline_comments')
+Arg = namedtuple('Arg', 'contents')
+
 def tokenize(str):
     'str -> Sequence(Token)'
     specs = [
         ('Comment', (r'#.*',)),
         ('NL',      (r'[\r\n]+',)),
         ('Space',   (r'[ \t\r\n]+',)),
+        ('Word',    (r'[^\'" \t\r\n]+',)),
         ('LParen',  (r'\(',)),
         ('RParen',  (r'\)',)),
-        ('Word',    (r'[^ \t\r\n()]+',)),
+        ('String',  (r'"[^"]*"',)), # '\"' escapes are ignored
     ]
     useless = ['NL', 'Space']
     t = make_tokenizer(specs)
@@ -53,10 +59,14 @@ def tokenize(str):
 
 def parse(seq):
     'Sequence(Token) -> object'
-    return seq
-    # comment = a(Comment()) >> tokval
-    # cmakelists = many(comment | statement)
-    # return cmakelists.parse(seq)
+    arg = oneplus(some(lambda t: t.type == 'Word')) >> (lambda w: Arg(w.value))
+    comment = skip(a('#')) + many(some(lambda c: c not in '\r\n')) >> (lambda c: Comment(c.value))
+    identifier = some(lambda t: t.type == 'Word') >> (lambda i: Identifier(i.value))
+    lparen = some(lambda t: t.type == 'LParen')
+    rparen = some(lambda t: t.type == 'RParen')
+    command = identifier + lparen + many(arg | comment) + rparen >> (lambda parts: Command(parts[0], parts[1:]))
+    cmakelists = many(comment | command) >> (lambda parts: File(parts))
+    return cmakelists.parse(seq)
 
 def main():
     #import logging
