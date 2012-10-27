@@ -45,7 +45,7 @@ def tokenize(str):
         ('Space',   (r'[ \t\r\n]+',)),
         ('LParen',  (r'\(',)),
         ('RParen',  (r'\)',)),
-        ('Word',    (r'\S+',)),
+        ('Word',    (r'[^ \t\r\n()]+',)),
     ]
     useless = ['NL', 'Space']
     t = make_tokenizer(specs)

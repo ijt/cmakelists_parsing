@@ -15,7 +15,7 @@ setup(
     author_email='itrotts@willowgarage.com',
     url='http://github.com/ijt/cmakelists_parsing',
     description='Parser for CMakeLists.txt files',
-    packages=find_packages(exclude=("tests",)),
+    packages=find_packages(),
     zip_safe=False,
     install_requires=['funcparserlib'],
     tests_require=['nose'],
