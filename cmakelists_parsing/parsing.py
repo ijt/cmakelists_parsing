@@ -39,7 +39,7 @@ ENCODING = 'utf-8'
 
 File = namedtuple('File', 'commands_and_comments')
 Comment = namedtuple('Comment', 'contents')
-Command = namedtuple('Command', 'name', 'args_and_inline_comments')
+Command = namedtuple('Command', 'name args_and_inline_comments')
 Arg = namedtuple('Arg', 'contents')
 
 def tokenize(str):
@@ -48,23 +48,26 @@ def tokenize(str):
         ('Comment', (r'#.*',)),
         ('NL',      (r'[\r\n]+',)),
         ('Space',   (r'[ \t\r\n]+',)),
-        ('Word',    (r'[^\'" \t\r\n]+',)),
+        ('Word',    (r'[^\'" \t\r\n()]+',)),
         ('LParen',  (r'\(',)),
         ('RParen',  (r'\)',)),
         ('String',  (r'"[^"]*"',)), # '\"' escapes are ignored
     ]
-    useless = ['NL', 'Space']
+    junk = ['NL', 'Space']
     t = make_tokenizer(specs)
-    return [x for x in t(str) if x.type not in useless]
+    return [x for x in t(str) if x.type not in junk]
 
 def parse(seq):
     'Sequence(Token) -> object'
-    arg = oneplus(some(lambda t: t.type == 'Word')) >> (lambda w: Arg(w.value))
-    comment = skip(a('#')) + many(some(lambda c: c not in '\r\n')) >> (lambda c: Comment(c.value))
-    identifier = some(lambda t: t.type == 'Word') >> (lambda i: Identifier(i.value))
-    lparen = some(lambda t: t.type == 'LParen')
-    rparen = some(lambda t: t.type == 'RParen')
-    command = identifier + lparen + many(arg | comment) + rparen >> (lambda parts: Command(parts[0], parts[1:]))
+    def make_command(parts):
+        print 'command parts:', parts
+        return Command(parts[0], parts[1])
+    arg = some(lambda t: t.type == 'Word') >> (lambda w: Arg(w.value))
+    comment = some(lambda t: t.type == 'Comment') >> (lambda c: Comment(c.value))
+    identifier = some(lambda t: t.type == 'Word') >> (lambda i: i.value)
+    lparen = skip(some(lambda t: t.type == 'LParen'))
+    rparen = skip(some(lambda t: t.type == 'RParen'))
+    command = identifier + lparen + many(arg | comment) + rparen >> (lambda (name, args): Command(name, args))
     cmakelists = many(comment | command) >> (lambda parts: File(parts))
     return cmakelists.parse(seq)
 
