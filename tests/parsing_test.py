@@ -27,8 +27,8 @@ class ParsingTestCase(unittest.TestCase):
         ]
         self.assertEqual(expected, output)
 
-    def test_parse_empty(self):
-    	self.assertEqual(File([]), parse(tokenize('')))
+    def test_parse_empty_raises_exception(self):
+    	self.assertRaises(CmParsingError, parse, [])
 
     def test_parse_nonempty1(self):
     	input = 'FIND_PACKAGE(ITK REQUIRED)'

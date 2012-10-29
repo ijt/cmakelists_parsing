@@ -120,7 +120,10 @@ def parse(seq):
     rparen = skip(some(lambda t: t.type == 'RParen'))
     command = identifier + lparen + many(arg | comment) + rparen >> (lambda (name, args): Command(name, args))
     cmakelists = oneplus(comment | command) + skip(finished) >> (lambda parts: File(parts))
-    return cmakelists.parse(seq)
+    try:
+        return cmakelists.parse(seq)
+    except NoParseError as e:
+        raise CmParsingError(str(e))
 
 def main():
     try:
