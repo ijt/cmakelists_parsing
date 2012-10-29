@@ -3,7 +3,8 @@
 import unittest
 
 from funcparserlib.lexer import Token
-from cmakelists_parsing.parsing import File, Command, Comment, Arg, tokenize, parse
+from cmakelists_parsing.parsing import File, Command, Comment, Arg, tokenize, \
+    parse, CmParsingError
 
 class ParsingTestCase(unittest.TestCase):
 
@@ -33,7 +34,7 @@ class ParsingTestCase(unittest.TestCase):
     	input = 'FIND_PACKAGE(ITK REQUIRED)'
     	output = parse(tokenize(input))
     	expected = File([Command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')])])
-    	msg = '\nexpected\n%s\ngot\n%s' % (expected, output)
+    	msg = '\nexpected\n%s\ngot\n%s' % (repr(expected), repr(output))
     	self.assertEqual(expected, output, msg)
 
     def test_parse_nonempty2(self):
@@ -67,6 +68,20 @@ ITKIO ITKBasicFilters ITKCommon
     		])
     	msg = '\nexpected\n%s\ngot\n%s' % (expected, output)
     	self.assertEqual(expected, output, msg)
+
+    def test_idempotency_of_parsing_and_unparsing(self):
+		input = '''
+# Top level comment
+FIND_PACKAGE(ITK REQUIRED)
+INCLUDE(${ITK_USE_FILE})
+'''
+		round_trip = lambda s: str(parse(tokenize(s)))
+		self.assertEqual(round_trip(input), round_trip(round_trip(input)))
+
+    def test_invalid_format_raises_an_exception(self):
+		input = 'FIND_PACKAGE('
+		toks = tokenize(input)
+		self.assertRaises(CmParsingError, parse, toks)
 
 if __name__ == '__main__':
     unittest.main()

@@ -37,10 +37,61 @@ except ImportError:
 
 ENCODING = 'utf-8'
 
-File = namedtuple('File', 'commands_and_comments')
-Comment = namedtuple('Comment', 'contents')
-Command = namedtuple('Command', 'name args_and_inline_comments')
-Arg = namedtuple('Arg', 'contents')
+class CmParsingError(Exception):
+    pass
+
+class PrettyRepr(object):
+    def __repr__(self):
+        import pprint
+        return self.__class__.__name__ + '(' + pprint.pformat(vars(self)) + ')'
+
+class Eq(object):
+    def __eq__(self, other):
+        return vars(self) == vars(other)
+
+class CmObj(PrettyRepr, Eq):
+    """
+    Base class for syntax tree nodes.
+    This gives them pretty printing and equality.
+    """
+    pass
+
+class File(CmObj):
+    """
+    Root of the abstract syntax tree for a CMakeLists file
+    """
+    def __init__(self, contents):
+        self.contents = contents
+
+    def __str__(self):
+        return '\n'.join(str(c) for c in self.contents) + '\n'
+
+class Comment(CmObj):
+    def __init__(self, contents):
+        self.contents = contents
+
+    def __str__(self):
+        return self.contents
+
+class Command(CmObj):
+    # Some of the args for a command can be inline comments.
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+
+    def __str__(self):
+        args = [str(a) + '\n' if isinstance(a, Comment) else str(a) for a in self.args]
+        return self.name + '(' + ' '.join(args) + ')'
+
+class Arg(CmObj):
+    """
+    Argument for a command
+    """
+    def __init__(self, contents):
+        self.contents = contents
+
+    def __str__(self):
+        return self.contents
 
 def tokenize(str):
     'str -> Sequence(Token)'
@@ -68,19 +119,15 @@ def parse(seq):
     lparen = skip(some(lambda t: t.type == 'LParen'))
     rparen = skip(some(lambda t: t.type == 'RParen'))
     command = identifier + lparen + many(arg | comment) + rparen >> (lambda (name, args): Command(name, args))
-    cmakelists = many(comment | command) >> (lambda parts: File(parts))
+    cmakelists = oneplus(comment | command) + skip(finished) >> (lambda parts: File(parts))
     return cmakelists.parse(seq)
 
 def main():
-    #import logging
-    #logging.basicConfig(level=logging.DEBUG)
-    #import funcparserlib
-    #funcparserlib.parser.debug = True
     try:
         stdin = os.fdopen(sys.stdin.fileno(), 'rb')
         input = stdin.read().decode(ENCODING)
         tree = parse(tokenize(input))
-        print pprint.pformat(tree).encode(ENCODING)
+        print str(tree).encode(ENCODING)
     except (NoParseError, LexerError), e:
         msg = (u'syntax error: %s' % e).encode(ENCODING)
         print >> sys.stderr, msg

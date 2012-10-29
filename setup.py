@@ -20,4 +20,10 @@ setup(
     install_requires=['funcparserlib'],
     tests_require=['nose'],
     test_suite='nose.collector',
-    include_package_data=True)
+    include_package_data=True,
+    entry_points = {
+        'console_scripts': [
+            'pprint_cmakelists = my_package.some_module:main_func',
+        ]
+    })
+
