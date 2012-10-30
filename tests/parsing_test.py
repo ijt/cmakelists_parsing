@@ -83,6 +83,18 @@ INCLUDE(${ITK_USE_FILE})
 		toks = tokenize(input)
 		self.assertRaises(CmParsingError, parse, toks)
 
+    def test_line_numbers_in_exceptions(self):
+		input = '''\
+FIND_PACKAGE(ITK)
+INCLUDE(
+'''
+		toks = tokenize(input)
+		try:
+			parse(toks)
+			self.fail('Expected an exception, but none was raised.')
+		except CmParsingError as e:
+			self.assertTrue('line 2' in str(e))
+
 if __name__ == '__main__':
     unittest.main()
 
