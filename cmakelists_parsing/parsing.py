@@ -17,10 +17,10 @@ class Arg(p.str):
     grammar = re.compile(r'[${}_a-zA-Z0-9.]+')
 
 class Comment(p.str):
-    grammar = p.comment_sh
+    grammar = p.comment_sh, p.endl
 
 class Command(list_fix.List):
-    grammar = p.name(), '(', p.some([Arg, Comment]), ')'
+    grammar = p.name(), '(', p.some([Arg, Comment]), ')', p.endl
 
 class File(list_fix.List):
     grammar = p.some([Command, Comment])
@@ -36,7 +36,7 @@ def main():
     ENCODING = 'utf-8'
     input = sys.stdin.read().decode(ENCODING)
     tree = parse(input)
-    print(str(tree).encode(ENCODING))
+    print(compose(tree).encode(ENCODING))
 
 if __name__ == '__main__':
     main()
