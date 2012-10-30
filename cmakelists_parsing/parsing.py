@@ -16,17 +16,23 @@ class CmParsingError(Exception):
     pass
 
 class Arg(p.str):
-    grammar = re.compile(r'[${}_a-zA-Z0-9]+')
+    grammar = re.compile(r'[${}_a-zA-Z0-9.]+')
 
 class Command(p.List):
     grammar = p.name(), '(', p.some(Arg), ')'
 
+class Comment(str):
+    grammar = p.comment_sh
+
 class File(p.List):
-    grammar = p.some(Command)
+    grammar = p.some([Command, Comment])
 
 def parse(s):
-    tree = p.parse(s, File, comment=p.comment_sh)
+    tree = p.parse(s, File)
     return tree
+
+# Inverse of parse
+compose = p.compose
 
 def main():
     import sys

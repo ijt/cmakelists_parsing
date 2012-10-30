@@ -3,8 +3,8 @@
 import unittest
 
 from funcparserlib.lexer import Token
-from cmakelists_parsing.parsing import File, Command, Arg, \
-    parse, CmParsingError
+from cmakelists_parsing.parsing import File, Command, Comment, Arg, \
+    parse, CmParsingError, compose
 
 class ParsingTestCase(unittest.TestCase):
 
@@ -58,7 +58,7 @@ ITKIO ITKBasicFilters ITKCommon
 FIND_PACKAGE(ITK REQUIRED)
 INCLUDE(${ITK_USE_FILE})
 '''
-		round_trip = lambda s: str(parse(s))
+		round_trip = lambda s: compose(parse(s))
 		self.assertEqual(round_trip(input), round_trip(round_trip(input)))
 
     def test_invalid_format_raises_an_exception(self):
