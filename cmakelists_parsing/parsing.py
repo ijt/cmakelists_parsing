@@ -11,20 +11,18 @@ The parser is based on [examples of the CMakeLists format][1].
 from __future__ import unicode_literals, print_function
 import re
 import pypeg2 as p
-
-class CmParsingError(Exception):
-    pass
+import list_fix
 
 class Arg(p.str):
     grammar = re.compile(r'[${}_a-zA-Z0-9.]+')
 
-class Comment(str):
+class Comment(p.str):
     grammar = p.comment_sh
 
-class Command(p.List):
+class Command(list_fix.List):
     grammar = p.name(), '(', p.some([Arg, Comment]), ')'
 
-class File(p.List):
+class File(list_fix.List):
     grammar = p.some([Command, Comment])
 
 def parse(s):
