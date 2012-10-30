@@ -3,8 +3,8 @@
 import unittest
 
 from funcparserlib.lexer import Token
-from cmakelists_parsing.parsing import File, Command, Comment, Arg, \
-    parse, compose
+from cmakelists_parsing.parsing import (
+    File, Command, CommentBlock, Comment, Arg, parse, compose)
 
 def command(name, args):
     return Command(args, name=name)
@@ -37,7 +37,7 @@ ITKIO ITKBasicFilters ITKCommon
     	output = parse(input)
 
     	expected = File([
-    		Comment('# Top level comment'),
+    		CommentBlock(['# Top level comment']),
     		command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')]),
     		command('INCLUDE', [Arg('${ITK_USE_FILE}')]),
 

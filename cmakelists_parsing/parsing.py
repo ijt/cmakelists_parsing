@@ -19,11 +19,14 @@ class Arg(p.str):
 class Comment(p.str):
     grammar = p.comment_sh, p.endl
 
+class CommentBlock(list_fix.List):
+    grammar = p.endl, p.some(Comment)
+
 class Command(list_fix.List):
     grammar = p.name(), '(', p.some([Arg, Comment]), ')', p.endl
 
 class File(list_fix.List):
-    grammar = p.some([Command, Comment])
+    grammar = p.some([Command, CommentBlock])
 
 def parse(s):
     return p.parse(s, File)
