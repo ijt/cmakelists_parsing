@@ -2,7 +2,6 @@
 
 import unittest
 
-from funcparserlib.lexer import Token
 from cmakelists_parsing.parsing import (
     File, Command, CommentBlock, Comment, Arg, parse, compose)
 
