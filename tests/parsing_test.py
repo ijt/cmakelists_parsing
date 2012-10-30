@@ -9,7 +9,7 @@ from cmakelists_parsing.parsing import File, Command, Comment, Arg, \
 class ParsingTestCase(unittest.TestCase):
 
     def test_parse_empty_raises_exception(self):
-    	self.assertRaises(CmParsingError, parse, [])
+    	self.assertRaises(Exception, parse, '')
 
     def test_parse_nonempty1(self):
     	input = 'FIND_PACKAGE(ITK REQUIRED)'
@@ -63,7 +63,7 @@ INCLUDE(${ITK_USE_FILE})
 
     def test_invalid_format_raises_an_exception(self):
 		input = 'FIND_PACKAGE('
-		self.assertRaises(CmParsingError, parse, input)
+		self.assertRaises(Exception, parse, input)
 
     def test_line_numbers_in_exceptions(self):
 		input = '''\
@@ -73,7 +73,7 @@ INCLUDE(
 		try:
 			parse(input)
 			self.fail('Expected an exception, but none was raised.')
-		except CmParsingError as e:
+		except Exception as e:
 			self.assertTrue('line 2' in str(e))
 
 if __name__ == '__main__':
