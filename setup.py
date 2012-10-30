@@ -23,7 +23,7 @@ setup(
     include_package_data=True,
     entry_points = {
         'console_scripts': [
-            'pprint_cmakelists = my_package.some_module:main_func',
+            'pprint_cmakelists = cmakelists_parsing.parsing:main',
         ]
     })
 
