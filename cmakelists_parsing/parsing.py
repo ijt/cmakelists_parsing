@@ -13,8 +13,11 @@ import re
 import pypeg2 as p
 import list_fix
 
+class QuotedString(p.str):
+    grammar = re.compile(r'"[^"]*"')
+
 class Arg(p.str):
-    grammar = re.compile(r'[${}/_a-zA-Z0-9.]+')
+    grammar = re.compile(r'[${}/_a-zA-Z0-9.+-]+')
 
 class Comment(p.str):
     grammar = p.comment_sh, p.endl
@@ -23,13 +26,13 @@ class CommentBlock(list_fix.List):
     grammar = p.endl, p.some(Comment)
 
 class Command(list_fix.List):
-    grammar = p.name(), '(', p.maybe_some([Arg, Comment]), ')', p.endl
+    grammar = p.name(), '(', p.maybe_some([Arg, QuotedString, Comment]), ')', p.endl
 
 class File(list_fix.List):
     grammar = p.some([Command, CommentBlock])
 
-def parse(s):
-    return p.parse(s, File)
+def parse(s, path='<string>'):
+    return p.parse(s, File, filename=path)
 
 # Inverse of parse
 compose = p.compose
