@@ -14,7 +14,9 @@ class ParsingTestCase(unittest.TestCase):
     def test_parse_nonempty1(self):
     	input = 'FIND_PACKAGE(ITK REQUIRED)'
     	output = parse(input)
-    	expected = File([Command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')])])
+        cmd = Command([Arg('ITK'), Arg('REQUIRED')])
+        cmd.name = 'FIND_PACKAGE'
+    	expected = File([cmd])
     	msg = '\nexpected\n%s\ngot\n%s' % (repr(expected), repr(output))
     	self.assertEqual(expected, output, msg)
 
@@ -51,7 +53,7 @@ ITKIO ITKBasicFilters ITKCommon
     	self.assertEqual(expected, output, msg)
 
     def test_idempotency_of_parsing_and_unparsing(self):
-		input = '''
+		input = '''\
 # Top level comment
 FIND_PACKAGE(ITK REQUIRED)
 INCLUDE(${ITK_USE_FILE})

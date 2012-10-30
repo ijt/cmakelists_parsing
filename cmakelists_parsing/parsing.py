@@ -9,13 +9,14 @@ The parser is based on [examples of the CMakeLists format][1].
 '''
 
 from __future__ import unicode_literals, print_function
+import re
 import pypeg2 as p
 
 class CmParsingError(Exception):
     pass
 
 class Arg(p.str):
-    grammar = p.re(r'[${}_a-zA-Z0-9]+')
+    grammar = re.compile(r'[${}_a-zA-Z0-9]+')
 
 class Command(p.List):
     grammar = p.name(), '(', p.some(Arg), ')'
@@ -24,7 +25,7 @@ class File(p.List):
     grammar = p.some(Command)
 
 def parse(s):
-    remainder, tree = p.parse(s, File, comment=p.comment_sh)
+    tree = p.parse(s, File, comment=p.comment_sh)
     return tree
 
 def main():
