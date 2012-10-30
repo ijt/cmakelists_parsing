@@ -84,6 +84,11 @@ INCLUDE(
             ])
         self.assertEqual(expected, tree)
 
+    def test_command_with_no_args(self):
+        tree = parse('cmd()')
+        expected = File([command('cmd', [])])
+        self.assertEqual(expected, tree)
+
 if __name__ == '__main__':
     unittest.main()
 
