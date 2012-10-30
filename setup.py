@@ -17,7 +17,7 @@ setup(
     description='Parser for CMakeLists.txt files',
     packages=find_packages(),
     zip_safe=False,
-    install_requires=['funcparserlib'],
+    install_requires=['pyPEG2'],
     tests_require=['nose'],
     test_suite='nose.collector',
     include_package_data=True,

@@ -3,36 +3,17 @@
 import unittest
 
 from funcparserlib.lexer import Token
-from cmakelists_parsing.parsing import File, Command, Comment, Arg, tokenize, \
+from cmakelists_parsing.parsing import File, Command, Arg, \
     parse, CmParsingError
 
 class ParsingTestCase(unittest.TestCase):
-
-    def test_tokenize_empty(self):
-        self.assertEqual([], tokenize(''))
-
-    def test_tokenize_nonempty(self):
-    	cm_input = '''
-		# This is a comment
-		link_directories (${HELLO_BINARY_DIR}/Hello # inline comment
-		)'''
-        output = tokenize(cm_input)
-        expected = [
-            Token('Comment', '# This is a comment'),
-            Token('Word', 'link_directories'),
-            Token('LParen', '('),
-            Token('Word', '${HELLO_BINARY_DIR}/Hello'),
-            Token('Comment', '# inline comment'),
-            Token('RParen', ')'),
-        ]
-        self.assertEqual(expected, output)
 
     def test_parse_empty_raises_exception(self):
     	self.assertRaises(CmParsingError, parse, [])
 
     def test_parse_nonempty1(self):
     	input = 'FIND_PACKAGE(ITK REQUIRED)'
-    	output = parse(tokenize(input))
+    	output = parse(input)
     	expected = File([Command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')])])
     	msg = '\nexpected\n%s\ngot\n%s' % (repr(expected), repr(output))
     	self.assertEqual(expected, output, msg)
@@ -50,7 +31,7 @@ ITKIO ITKBasicFilters ITKCommon
 )
     	'''
 
-    	output = parse(tokenize(input))
+    	output = parse(input)
 
     	expected = File([
     		Comment('# Top level comment'),
@@ -75,22 +56,20 @@ ITKIO ITKBasicFilters ITKCommon
 FIND_PACKAGE(ITK REQUIRED)
 INCLUDE(${ITK_USE_FILE})
 '''
-		round_trip = lambda s: str(parse(tokenize(s)))
+		round_trip = lambda s: str(parse(s))
 		self.assertEqual(round_trip(input), round_trip(round_trip(input)))
 
     def test_invalid_format_raises_an_exception(self):
 		input = 'FIND_PACKAGE('
-		toks = tokenize(input)
-		self.assertRaises(CmParsingError, parse, toks)
+		self.assertRaises(CmParsingError, parse, input)
 
     def test_line_numbers_in_exceptions(self):
 		input = '''\
 FIND_PACKAGE(ITK)
 INCLUDE(
 '''
-		toks = tokenize(input)
 		try:
-			parse(toks)
+			parse(input)
 			self.fail('Expected an exception, but none was raised.')
 		except CmParsingError as e:
 			self.assertTrue('line 2' in str(e))
