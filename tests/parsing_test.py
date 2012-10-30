@@ -77,6 +77,13 @@ INCLUDE(
 		except Exception as e:
 			self.assertTrue('line 2' in str(e))
 
+    def test_arg_with_a_slash(self):
+        tree = parse('include_directories (${HELLO_SOURCE_DIR}/Hello)')
+        expected = File([
+            command('include_directories', ['${HELLO_SOURCE_DIR}/Hello'])
+            ])
+        self.assertEqual(expected, tree)
+
 if __name__ == '__main__':
     unittest.main()
 

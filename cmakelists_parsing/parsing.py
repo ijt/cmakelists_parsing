@@ -14,7 +14,7 @@ import pypeg2 as p
 import list_fix
 
 class Arg(p.str):
-    grammar = re.compile(r'[${}_a-zA-Z0-9.]+')
+    grammar = re.compile(r'[${}/_a-zA-Z0-9.]+')
 
 class Comment(p.str):
     grammar = p.comment_sh, p.endl
