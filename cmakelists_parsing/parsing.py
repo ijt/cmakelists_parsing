@@ -37,9 +37,9 @@ def parse(s, filename='<string>'):
     '''
     return p.parse(s, File, filename=filename)
 
-if_rx = re.compile(r'^\s*if\s*\(', re.IGNORECASE)
+start_rx = re.compile(r'^\s*(if|foreach|macro|function)\s*\(', re.IGNORECASE)
 else_rx = re.compile(r'^\s*else\s*\(', re.IGNORECASE)
-endif_rx = re.compile(r'^\s*endif\s*\(', re.IGNORECASE)
+end_rx = re.compile(r'^\s*(endif|endforeach|endmacro|endfunction)\s*\(', re.IGNORECASE)
 def compose_lines(tree, indent):
     '''
     compose_lines(tree, indent) yields indented lines of the
@@ -48,12 +48,12 @@ def compose_lines(tree, indent):
     s = p.compose(tree)
     level = 0
     for line in s.splitlines():
-        if if_rx.match(line):
+        if start_rx.match(line):
             yield level*indent + line
             level += 1
         elif else_rx.match(line):
             yield (level-1)*indent + line
-        elif endif_rx.match(line):
+        elif end_rx.match(line):
             level -= 1
             yield level*indent + line
         else:
