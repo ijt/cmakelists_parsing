@@ -25,7 +25,7 @@ class CommentBlock(list_fix.List):
     grammar = p.endl, p.some(Comment)
 
 class Command(list_fix.List):
-    grammar = p.name(), '(', p.maybe_some([Arg, QuotedString, Comment]), ')', p.endl
+    grammar = p.name(), '(', p.maybe_some([Arg, QuotedString, Comment]), ')', p.optional(Comment), p.endl
 
 class File(list_fix.List):
     grammar = p.some([Command, CommentBlock])

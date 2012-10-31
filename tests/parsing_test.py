@@ -9,6 +9,8 @@ def command(name, args):
     return Command(args, name=name)
 
 class ParsingTestCase(unittest.TestCase):
+    def setUp(self):
+        self.maxDiff = None
 
     def test_parse_empty_raises_exception(self):
     	self.assertRaises(Exception, parse, '')
@@ -87,6 +89,26 @@ INCLUDE(
         tree = parse('cmd()')
         expected = File([command('cmd', [])])
         self.assertEqual(expected, tree)
+
+    def assertStringEqualIgnoreSpace(self, a, b):
+        a2 = ' '.join(a.split())
+        b2 = ' '.join(b.split())
+        msg = '\nExpected\n%s\ngot\n%s\n(ignoring whitespace details)' % (a, b)
+        self.assertEqual(a2, b2, msg)
+
+    def test_comments_preserved(self):
+        input = '''\
+# file comment
+
+# comment above command
+command1 (VERSION 2.6) # inline comment for command1
+
+command2 (x  # inline comment about x
+    ) # inline comment for command2
+'''
+        output = compose(parse(input))
+
+        self.assertStringEqualIgnoreSpace(input, output)
 
 if __name__ == '__main__':
     unittest.main()
