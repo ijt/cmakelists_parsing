@@ -68,10 +68,12 @@ def compose(tree, indent='    '):
 
 def main():
     import sys
-    ENCODING = 'utf-8'
-    input = sys.stdin.read().decode(ENCODING)
-    tree = parse(input)
-    print(compose(tree).encode(ENCODING))
+    files = (open(f) for f in sys.argv[1:]) if sys.argv[1:] else [sys.stdin]
+    for f in files:
+        with f:
+            input = f.read()
+            tree = parse(input)
+            print(compose(tree))
 
 if __name__ == '__main__':
     main()
