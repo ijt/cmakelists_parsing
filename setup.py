@@ -10,7 +10,7 @@ except ImportError:
 
 setup(
     name='cmakelists_parsing',
-    version='0.1',
+    version='0.2',
     author='Issac Trotts',
     author_email='itrotts@willowgarage.com',
     url='http://github.com/ijt/cmakelists_parsing',
