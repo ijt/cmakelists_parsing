@@ -8,11 +8,15 @@ Installing
 
     python setup.py install
 
+or
+
+    sudo pip install cmakelists_parsing
+
 Usage
 -----
 
-    >>> from cmakelists_parsing.parsing import tokenize, parse
+    >>> import cmakelists_parsing.parsing as cmp
     >>> cmakelists_contents = 'FIND_PACKAGE(ITK REQUIRED)  # Hello, CMake!'
-    >>> parse(tokenize(cmakelists_contents))
-    File(commands_and_comments=[Command(name='FIND_PACKAGE', args_and_inline_comments=[Arg(contents='ITK'), Arg(contents='REQUIRED')]), Comment(contents='# Hello, CMake!')])
+    >>> cmp.parse(cmakelists_contents)
+    File([Command([u'ITK', u'REQUIRED']), CommentBlock([u'# Hello, CMake!'])])
 
