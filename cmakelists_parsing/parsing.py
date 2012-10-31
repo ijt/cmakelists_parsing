@@ -59,7 +59,7 @@ def parseFile(toks):
         if typ == 'comment':
             yield Comment(tok_contents)
         elif typ == 'blank line':
-            yield BlankLine(),
+            yield BlankLine()
         elif typ == 'word':
             yield parseCommand(line_num, tok_contents, toks)
 
