@@ -2,7 +2,7 @@
 
 import unittest
 
-from cmakelists_parsing.parsing2 import (
+from cmakelists_parsing.parsing import (
     File, Command, Comment, Arg, parse, compose)
 
 class ParsingTestCase(unittest.TestCase):

@@ -32,7 +32,23 @@ def compose(tree, indent='    '):
     compose(tree, indent) returns the pretty-print string for tree
     with indentation given by the string indent.
     '''
-    return ''
+    return '\n'.join(compose_lines(tree.contents, indent))
+
+def compose_lines(tree_contents, indent):
+    for item in tree_contents:
+        if isinstance(item, Comment):
+            yield item.contents
+        elif isinstance(item, BlankLine):
+            yield ''
+        elif isinstance(item, _Command):
+            for line in command_to_lines(item):
+                yield line
+
+def command_to_lines(cmd):
+    yield cmd.name + '(' + ' '.join(map(arg_to_str, cmd.body)) + ')'
+
+def arg_to_str(arg):
+    return arg.contents
 
 def parseFile(toks):
     '''
@@ -97,3 +113,14 @@ def tokenize_lines(lines):
         for t in toks:
             yield line_num, t
 
+def main():
+    import sys
+    files = (open(f) for f in sys.argv[1:]) if sys.argv[1:] else [sys.stdin]
+    for f in files:
+        with f:
+            input = f.read()
+            tree = parse(input)
+            print(compose(tree))
+
+if __name__ == '__main__':
+    main()
