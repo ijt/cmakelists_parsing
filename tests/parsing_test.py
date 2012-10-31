@@ -2,23 +2,20 @@
 
 import unittest
 
-from cmakelists_parsing.parsing import (
-    File, Command, CommentBlock, Comment, Arg, parse, compose)
-
-def command(name, args):
-    return Command(args, name=name)
+from cmakelists_parsing.parsing2 import (
+    File, Command, Comment, Arg, parse, compose)
 
 class ParsingTestCase(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 
     def test_parse_empty_raises_exception(self):
-    	self.assertRaises(Exception, parse, '')
+    	self.assertEqual(File([]), parse(''))
 
     def test_parse_nonempty1(self):
     	input = 'FIND_PACKAGE(ITK REQUIRED)'
     	output = parse(input)
-    	expected = File([command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')])])
+    	expected = File([Command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')])])
     	msg = '\nexpected\n%s\ngot\n%s' % (repr(expected), repr(output))
     	self.assertEqual(expected, output, msg)
 
@@ -39,11 +36,11 @@ ITKIO ITKBasicFilters ITKCommon
 
     	expected = File([
     		CommentBlock(['# Top level comment']),
-    		command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')]),
-    		command('INCLUDE', [Arg('${ITK_USE_FILE}')]),
+    		Command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')]),
+    		Command('INCLUDE', [Arg('${ITK_USE_FILE}')]),
 
-    		command('ADD_EXECUTABLE', [Arg('CastImageFilter'), Arg('CastImageFilter.cxx')]),
-    		command('TARGET_LINK_LIBRARIES', [Arg('CastImageFilter'),
+    		Command('ADD_EXECUTABLE', [Arg('CastImageFilter'), Arg('CastImageFilter.cxx')]),
+    		Command('TARGET_LINK_LIBRARIES', [Arg('CastImageFilter'),
     										  Comment('# inline comment 1'),
     										  Arg('vtkHybrid'),
     										  Comment('#inline comment 2'),
@@ -81,13 +78,13 @@ INCLUDE(
     def test_arg_with_a_slash(self):
         tree = parse('include_directories (${HELLO_SOURCE_DIR}/Hello)')
         expected = File([
-            command('include_directories', ['${HELLO_SOURCE_DIR}/Hello'])
+            Command('include_directories', ['${HELLO_SOURCE_DIR}/Hello'])
             ])
         self.assertEqual(expected, tree)
 
-    def test_command_with_no_args(self):
+    def test_Command_with_no_args(self):
         tree = parse('cmd()')
-        expected = File([command('cmd', [])])
+        expected = File([Command('cmd', [])])
         self.assertEqual(expected, tree)
 
     def assertStringEqualIgnoreSpace(self, a, b):
@@ -98,7 +95,7 @@ INCLUDE(
 
     def test_arg_comments_preserved(self):
         input = '''
-some_command (
+some_Command (
     x  # inline comment about x
     )
 '''
@@ -108,12 +105,12 @@ some_command (
         input = '''\
 # file comment
 
-# comment above command
-command1 (VERSION 2.6) # inline comment for command1
+# comment above Command
+Command1 (VERSION 2.6) # inline comment for Command1
 
-command2 (x  # inline comment about x
+Command2 (x  # inline comment about x
     "y"      # inline comment about a quoted string "y"
-    ) # inline comment for command2
+    ) # inline comment for Command2
 '''
         output = compose(parse(input))
 
@@ -128,8 +125,8 @@ newlines
 set (MY_STRING "%s")
 ''' % s
         tree = parse(input)
-        expected = File([command('set', [Arg('MY_STRING'),
-                                         QuotedString(s)]))])
+        expected = File([Command('set', [Arg('MY_STRING'),
+                                         QuotedString(s)])])
         self.assertEqual(expected, tree)
 
 if __name__ == '__main__':

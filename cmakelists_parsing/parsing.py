@@ -1,79 +1,99 @@
-# -*- coding: utf-8 -*-
-
-'''
-A parser for files in CMakeLists.txt format:
-
-http://www.vtk.org/Wiki/CMake/Examples
-
-'''
-
-from __future__ import unicode_literals, print_function
+from collections import namedtuple
 import re
-import pypeg2 as p
-import list_fix
+import StringIO
 
-class QuotedString(p.str):
-    grammar = re.compile(r'"[^"]*"')
+QuotedString = namedtuple('QuotedString', 'contents comments')
+_Arg = namedtuple('Arg', 'contents comments')
+_Command = namedtuple('Command', 'name body comments')
+Comment = namedtuple('Comment', 'contents')
+BlankLine = namedtuple('BlankLine', '')
+File = namedtuple('File', 'contents')
+# TODO: if, else, endif, function, endfunction, macro, endmacro
 
-class Arg(p.str):
-    grammar = re.compile(r'[^" \t\r\n()#]+')
+def Arg(contents, comments=None):
+    return _Arg(contents, comments or [])
 
-class Comment(p.str):
-    grammar = p.comment_sh, p.endl
+def Command(name, body, comments=None):
+    return _Command(name, body, comments or [])
 
-class CommentBlock(list_fix.List):
-    grammar = p.endl, p.some(Comment)
+class CMakeParseError(Exception):
+    pass
 
-class Command(list_fix.List):
-    grammar = p.name(), '(', p.maybe_some([Arg, QuotedString, Comment]), ')', p.optional(Comment), p.endl
-
-class File(list_fix.List):
-    grammar = p.some([Command, CommentBlock])
-
-def parse(s, filename='<string>'):
+def parse(s, path='<string>'):
     '''
     parse(s, filename) parses a string s in CMakeLists format whose
     contents are assumed to have come from the named file.
     '''
-    return p.parse(s, File, filename=filename)
-
-start_rx = re.compile(r'^\s*(if|foreach|macro|function)\s*\(', re.IGNORECASE)
-else_rx = re.compile(r'^\s*else\s*\(', re.IGNORECASE)
-end_rx = re.compile(r'^\s*(endif|endforeach|endmacro|endfunction)\s*\(', re.IGNORECASE)
-def compose_lines(tree, indent):
-    '''
-    compose_lines(tree, indent) yields indented lines of the
-    pretty-print of the given tree.
-    '''
-    s = p.compose(tree)
-    level = 0
-    for line in s.splitlines():
-        if start_rx.match(line):
-            yield level*indent + line
-            level += 1
-        elif else_rx.match(line):
-            yield (level-1)*indent + line
-        elif end_rx.match(line):
-            level -= 1
-            yield level*indent + line
-        else:
-            yield level*indent + line
+    toks = tokenize_lines(s.splitlines())
+    return File(list(parseFile(toks)))
 
 def compose(tree, indent='    '):
     '''
     compose(tree, indent) returns the pretty-print string for tree
     with indentation given by the string indent.
     '''
-    return '\n'.join(compose_lines(tree, indent)) + '\n'
+    return ''
 
-def main():
-    import sys
-    files = (open(f) for f in sys.argv[1:]) if sys.argv[1:] else [sys.stdin]
-    for f in files:
-        with f:
-            input = f.read()
-            tree = parse(input)
-            print(compose(tree))
+def parseFile(toks):
+    '''
+    parseFile(toks) yields top-level elements of the syntax tree for
+    a CMakeLists file, given a generator of tokens from the file.
+    '''
+    for line_num, (typ, tok_contents) in toks:
+        if typ == 'comment':
+            yield Comment(tok_contents)
+        elif typ == 'blank line':
+            yield BlankLine(),
+        elif typ == 'word':
+            yield parseCommand(line_num, tok_contents, toks)
 
-if __name__ == '__main__':
-    main()
+def parseCommand(line_num, command_name, toks):
+    cmd = Command(name=command_name, body=[], comments=[])
+    expect('left paren', toks)
+    for line_num, (typ, tok_contents) in toks:
+        if typ == 'right paren':
+            return cmd
+        elif typ == 'left paren':
+            raise ValueError('Unexpected left paren at line %s' % line_num)
+        elif typ in ('word', 'string'):
+            cmd.body.append(Arg(tok_contents, []))
+        elif typ == 'comment':
+            c = Comment(tok_contents)
+            if cmd.body:
+                cmd.body[-1].comments.append(c)
+            else:
+                cmd.comments.append(c)
+
+def expect(expected_type, toks):
+    line_num, (typ, tok_contents) = toks.next()
+    if typ != expected_type:
+        msg = 'Expected a %s, but got "%s" at line %s' % (
+            expected_type, tok_contents, line_num)
+        raise CMakeParseError(msg)
+
+# http://stackoverflow.com/questions/691148/pythonic-way-to-implement-a-tokenizer
+# TODO: Handle multiline strings.
+scanner = re.Scanner([
+    (r'#.*',                lambda scanner, token: ("comment", token)),
+    (r'"[^"]*"',            lambda scanner, token: ("string", token)),
+    (r"\(",                 lambda scanner, token: ("left paren", token)),
+    (r"\)",                 lambda scanner, token: ("right paren", token)),
+    (r'[^ \t\r\n()#"]+',    lambda scanner, token: ("word", token)),
+    (r"\s+",                None), # skip other whitespace
+])
+
+def tokenize_lines(lines):
+    """
+    tokenize_cmake(lines) returns a list of (line_num, (token_type, token_contents))
+    given a list of lines from a CMakeLists file.
+    """
+    for line_num, line in enumerate(lines, start=1):
+        toks, remainder = scanner.scan(line)
+        if remainder != '':
+            msg = 'Unrecognized tokens at line %s: %s' % (line_num, remainder)
+            raise ValueError(msg)
+        if not toks:
+            yield line_num, ('blank line', '')
+        for t in toks:
+            yield line_num, t
+
