@@ -96,6 +96,14 @@ INCLUDE(
         msg = '\nExpected\n%s\ngot\n%s\n(ignoring whitespace details)' % (a, b)
         self.assertEqual(a2, b2, msg)
 
+    def test_arg_comments_preserved(self):
+        input = '''
+some_command (
+    x  # inline comment about x
+    )
+'''
+        output = compose(parse(input))
+
     def test_comments_preserved(self):
         input = '''\
 # file comment
@@ -104,11 +112,25 @@ INCLUDE(
 command1 (VERSION 2.6) # inline comment for command1
 
 command2 (x  # inline comment about x
+    "y"      # inline comment about a quoted string "y"
     ) # inline comment for command2
 '''
         output = compose(parse(input))
 
         self.assertStringEqualIgnoreSpace(input, output)
+
+    def test_multiline_string(self):
+        s = '''
+string containing
+newlines
+'''
+        input = '''
+set (MY_STRING "%s")
+''' % s
+        tree = parse(input)
+        expected = File([command('set', [Arg('MY_STRING'),
+                                         QuotedString(s)]))])
+        self.assertEqual(expected, tree)
 
 if __name__ == '__main__':
     unittest.main()
