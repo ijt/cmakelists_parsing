@@ -4,14 +4,24 @@ import unittest
 
 import cmakelists_parsing.parsing as cmp
 
-class FilesTestCase(unittest.TestCase):
-    def test_idempotency_of_parse_unparse_on_examples(self):
-        round_trip = lambda s, path='<string>': cmp.compose(cmp.parse(s, path))
+def yield_examples():
+    paths = glob.glob(os.path.join(os.path.dirname(__file__),
+                                   '..', 'example_inputs', '*'))
+    for path in paths:
+        with open(path) as file:
+            contents = file.read()
+            yield path, contents
 
-        paths = glob.glob(os.path.join(os.path.dirname(__file__),
-                                       '..', 'example_inputs', '*'))
-        for path in paths:
-            with open(path) as file:
-                contents = file.read()
-                self.assertEqual(round_trip(contents, path), round_trip(round_trip(contents, path)),
-                    'Failed on %s' % path)
+class ExamplesTestCase(unittest.TestCase):
+    def test_idempotency_of_parse_unparse(self):
+        round_trip = lambda s, path='<string>': cmp.compose(cmp.parse(s, path))
+        for path, contents in yield_examples():
+            self.assertEqual(round_trip(contents, path),
+                             round_trip(round_trip(contents, path)),
+                             'Failed on %s' % path)
+
+    def test_tree_is_unchanged(self):
+        for path, contents in yield_examples():
+            self.assertEqual(cmp.parse(contents, path),
+                             cmp.parse(cmp.compose(cmp.parse(contents, path))),
+                             'Failed on %s' % path)
