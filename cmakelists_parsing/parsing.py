@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
-'''A CMakeLists parser using funcparserlib.
+'''
+A parser for files in CMakeLists.txt format:
 
-The parser is based on [examples of the CMakeLists format][1].
-
-  [1]: http://www.vtk.org/Wiki/CMake/Examples
+http://www.vtk.org/Wiki/CMake/Examples
 
 '''
 
