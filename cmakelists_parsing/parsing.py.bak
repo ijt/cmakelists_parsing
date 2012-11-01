@@ -5,10 +5,10 @@ import StringIO
 QuotedString = namedtuple('QuotedString', 'contents comments')
 _Arg = namedtuple('Arg', 'contents comments')
 _Command = namedtuple('Command', 'name body comments')
+Comment = namedtuple('Comment', 'contents')
 BlankLine = namedtuple('BlankLine', '')
 File = namedtuple('File', 'contents')
 # TODO: if, else, endif, function, endfunction, macro, endmacro
-class Comment(str): pass
 
 def Arg(contents, comments=None):
     return _Arg(contents, comments or [])
@@ -26,9 +26,6 @@ def parse(s, path='<string>'):
     '''
     toks = tokenize_lines(s.splitlines())
     return File(list(parseFile(toks)))
-
-def strip_blanks(tree):
-    return File([x for x in tree.contents if not isinstance(x, BlankLine)])
 
 def compose(tree, indent='    '):
     '''
@@ -66,7 +63,7 @@ def parseFile(toks):
         elif typ == 'word':
             yield parseCommand(line_num, tok_contents, toks)
 
-def parseCommand(start_line_num, command_name, toks):
+def parseCommand(line_num, command_name, toks):
     cmd = Command(name=command_name, body=[], comments=[])
     expect('left paren', toks)
     for line_num, (typ, tok_contents) in toks:
@@ -82,9 +79,6 @@ def parseCommand(start_line_num, command_name, toks):
                 cmd.body[-1].comments.append(c)
             else:
                 cmd.comments.append(c)
-    msg = 'File ended while processing command "%s" started at line %s' % (
-        command_name, start_line_num)
-    raise CMakeParseError(msg)
 
 def expect(expected_type, toks):
     line_num, (typ, tok_contents) = toks.next()
