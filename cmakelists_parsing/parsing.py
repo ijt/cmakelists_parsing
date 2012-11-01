@@ -149,13 +149,26 @@ def tokenize_lines(lines):
             yield line_num, t
 
 def main():
+    import argparse
     import sys
-    files = (open(f) for f in sys.argv[1:]) if sys.argv[1:] else [sys.stdin]
+    parser = argparse.ArgumentParser(description='Pretty-print CMakeLists files.')
+    parser.add_argument('files', type=str, nargs='*',
+                        help='files to pretty print (default is stdin)')
+    parser.add_argument('-t', '--tree', action='store_true',
+                        help='print out the syntax trees')
+    args = parser.parse_args()
+    filenames = args.files
+    files = (open(f) for f in filenames) if filenames else [sys.stdin]
     for f in files:
         with f:
             input = f.read()
             tree = parse(input)
-            print(compose(tree))
+            if args.tree:
+                # Print out AST
+                print(str(tree))
+            else:
+                # Pretty print
+                print(compose(tree))
 
 if __name__ == '__main__':
     main()

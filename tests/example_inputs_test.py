@@ -22,6 +22,7 @@ class ExamplesTestCase(unittest.TestCase):
 
     def test_tree_is_unchanged(self):
         for path, contents in yield_examples():
-            self.assertEqual(cmp.parse(contents, path),
-                             cmp.parse(cmp.compose(cmp.parse(contents, path))),
-                             'Failed on %s' % path)
+            expected = cmp.parse(contents, path)
+            actual = cmp.parse(cmp.compose(cmp.parse(contents, path)))
+            msg = 'Failed on %s.\nExpected\n%s\n\nGot\n%s' % (path, expected, actual)
+            self.assertEqual(expected, actual, msg)
