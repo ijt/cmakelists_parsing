@@ -63,7 +63,7 @@ def parseFile(toks):
         elif typ == 'word':
             yield parseCommand(line_num, tok_contents, toks)
 
-def parseCommand(line_num, command_name, toks):
+def parseCommand(start_line_num, command_name, toks):
     cmd = Command(name=command_name, body=[], comments=[])
     expect('left paren', toks)
     for line_num, (typ, tok_contents) in toks:
@@ -79,6 +79,9 @@ def parseCommand(line_num, command_name, toks):
                 cmd.body[-1].comments.append(c)
             else:
                 cmd.comments.append(c)
+    msg = 'File ended while processing command "%s" started at line %s' % (
+        command_name, start_line_num)
+    raise CMakeParseError(msg)
 
 def expect(expected_type, toks):
     line_num, (typ, tok_contents) = toks.next()

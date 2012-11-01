@@ -73,8 +73,6 @@ INCLUDE(
             parse(input)
             self.fail('Expected an exception, but none was raised.')
         except Exception as e:
-            import pdb
-            pdb.set_trace()
             self.assertTrue('line 2' in str(e))
 
     def test_arg_with_a_slash(self):
