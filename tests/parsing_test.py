@@ -3,7 +3,7 @@
 import unittest
 
 from cmakelists_parsing.parsing import (
-    File, Command, Comment, Arg, parse, compose)
+    File, Command, Comment, BlankLine, Arg, parse, compose)
 
 class ParsingTestCase(unittest.TestCase):
     def setUp(self):
@@ -20,7 +20,7 @@ class ParsingTestCase(unittest.TestCase):
         self.assertEqual(expected, output, msg)
 
     def test_parse_nonempty2(self):
-        input = '''
+        input = '''\
 # Top level comment
 FIND_PACKAGE(ITK REQUIRED)
 INCLUDE(${ITK_USE_FILE})
@@ -38,15 +38,14 @@ ITKIO ITKBasicFilters ITKCommon
             Comment('# Top level comment'),
             Command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')]),
             Command('INCLUDE', [Arg('${ITK_USE_FILE}')]),
-
+            BlankLine(),
             Command('ADD_EXECUTABLE', [Arg('CastImageFilter'), Arg('CastImageFilter.cxx')]),
-            Command('TARGET_LINK_LIBRARIES', [Arg('CastImageFilter'),
-                                              Comment('# inline comment 1'),
-                                              Arg('vtkHybrid'),
-                                              Comment('#inline comment 2'),
+            Command('TARGET_LINK_LIBRARIES', [Arg('CastImageFilter', comments=['# inline comment 1']),
+                                              Arg('vtkHybrid', comments=['#inline comment 2']),
                                               Arg('ITKIO'),
                                               Arg('ITKBasicFilters'),
-                                              Arg('ITKCommon')])
+                                              Arg('ITKCommon')]),
+            BlankLine()
             ])
         msg = '\nexpected\n%s\ngot\n%s' % (expected, output)
         self.assertEqual(expected, output, msg)
@@ -78,7 +77,7 @@ INCLUDE(
     def test_arg_with_a_slash(self):
         tree = parse('include_directories (${HELLO_SOURCE_DIR}/Hello)')
         expected = File([
-            Command('include_directories', ['${HELLO_SOURCE_DIR}/Hello'])
+            Command('include_directories', [Arg('${HELLO_SOURCE_DIR}/Hello')])
             ])
         self.assertEqual(expected, tree)
 
