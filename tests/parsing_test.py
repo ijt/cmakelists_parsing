@@ -129,6 +129,20 @@ set (MY_STRING "%s")
                                          QuotedString(s)])])
         self.assertEqual(expected, tree)
 
+    def test_ifs_indented(self):
+        input = '''
+if(a)
+    if(b)
+        set(X 1)
+    endif()
+else(a)
+    if(c)
+        set(Y 2)
+    endif(c)
+endif(a)
+'''
+        self.assertMultiLineEqual(input, compose(parse(input)))
+
 if __name__ == '__main__':
     unittest.main()
 

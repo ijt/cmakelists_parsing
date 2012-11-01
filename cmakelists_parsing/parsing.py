@@ -38,22 +38,28 @@ def parse(s, path='<string>'):
 def strip_blanks(tree):
     return File([x for x in tree.contents if not isinstance(x, BlankLine)])
 
-def compose(tree, indent='    '):
+def compose(tree, tab='    '):
     '''
     Returns the pretty-print string for tree
-    with indentation given by the string indent.
+    with indentation given by the string tab.
     '''
-    return '\n'.join(compose_lines(tree.contents, indent)) + '\n'
+    return '\n'.join(compose_lines(tree.contents, tab)) + '\n'
 
-def compose_lines(tree_contents, indent):
+def compose_lines(tree_contents, tab):
+    level = 0
     for item in tree_contents:
         if isinstance(item, (Comment, str)):
-            yield item
+            yield level * tab + item
         elif isinstance(item, BlankLine):
             yield ''
         elif isinstance(item, _Command):
+            name = item.name.lower()
+            if name in ('endif', 'else'):
+                level -= 1
             for line in command_to_lines(item):
-                yield line
+                yield level * tab + line
+            if name in ('if', 'else'):
+                level += 1
 
 def command_to_lines(cmd):
     final_paren = '\n)' if cmd.body and cmd.body[-1].comments else ')'
