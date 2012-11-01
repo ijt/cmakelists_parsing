@@ -2,19 +2,23 @@ from collections import namedtuple
 import re
 import StringIO
 
+from cmakelists_parsing import list_utils
+
 QuotedString = namedtuple('QuotedString', 'contents comments')
 _Arg = namedtuple('Arg', 'contents comments')
 _Command = namedtuple('Command', 'name body comment')
 BlankLine = namedtuple('BlankLine', '')
 File = namedtuple('File', 'contents')
 # TODO: if, else, endif, function, endfunction, macro, endmacro
-class Comment(str): pass
+class Comment(str):
+    def __repr__(self):
+        return 'Comment(' + str(self) + ')'
 
 def Arg(contents, comments=None):
     return _Arg(contents, comments or [])
 
-def Command(name, body, comments=None):
-    return _Command(name, body, comments or [])
+def Command(name, body, comment=None):
+    return _Command(name, body, comment)
 
 class CMakeParseError(Exception):
     pass
@@ -25,14 +29,17 @@ def parse(s, path='<string>'):
     contents are assumed to have come from the named file.
     '''
     toks = tokenize_lines(s.splitlines())
-    return File(list(parse_file(toks)))
+    nums_items = list(parse_file(toks))
+    nums_items = attach_comments_to_commands(nums_items)
+    items = [item for line_num, item in nums_items]
+    return File(items)
 
 def strip_blanks(tree):
     return File([x for x in tree.contents if not isinstance(x, BlankLine)])
 
 def compose(tree, indent='    '):
     '''
-    compose(tree, indent) returns the pretty-print string for tree
+    Returns the pretty-print string for tree
     with indentation given by the string indent.
     '''
     return '\n'.join(compose_lines(tree.contents, indent))
@@ -49,7 +56,8 @@ def compose_lines(tree_contents, indent):
 
 def command_to_lines(cmd):
     final_paren = '\n)' if cmd.body and cmd.body[-1].comments else ')'
-    yield cmd.name + '(' + ' '.join(map(arg_to_str, cmd.body)) + final_paren
+    comment_part = '  ' + cmd.comment if cmd.comment else ''
+    yield cmd.name + '(' + ' '.join(map(arg_to_str, cmd.body)) + final_paren + comment_part
 
 def arg_to_str(arg):
     comment_part = '  ' + '\n'.join(arg.comments) + '\n' if arg.comments else ''
@@ -57,25 +65,42 @@ def arg_to_str(arg):
 
 def parse_file(toks):
     '''
-    parse_file(toks) yields top-level elements of the syntax tree for
+    Yields line number ranges and top-level elements of the syntax tree for
     a CMakeLists file, given a generator of tokens from the file.
 
     toks must really be a generator, not a list, for this to work.
     '''
     for line_num, (typ, tok_contents) in toks:
         if typ == 'comment':
-            yield Comment(tok_contents)
+            yield ([line_num], Comment(tok_contents))
         elif typ == 'blank line':
-            yield BlankLine()
+            yield ([line_num], BlankLine())
         elif typ == 'word':
-            yield parse_command(line_num, tok_contents, toks)
+            line_nums, cmd = parse_command(line_num, tok_contents, toks)
+            yield (line_nums, cmd)
+
+def attach_comments_to_commands(nodes):
+    return list_utils.merge_pairs(nodes, command_then_comment, attach_comment_to_command)
+
+def command_then_comment(a, b):
+    line_nums_a, thing_a = a
+    line_nums_b, thing_b = b
+    return (isinstance(thing_a, _Command) and
+            isinstance(thing_b, Comment) and
+            set(line_nums_a).intersection(line_nums_b))
+
+def attach_comment_to_command(lnums_command, lnums_comment):
+    command_lines, command = lnums_command
+    _, comment = lnums_comment
+    return command_lines, Command(command.name, command.body[:], comment)
 
 def parse_command(start_line_num, command_name, toks):
-    cmd = Command(name=command_name, body=[], comments=[])
+    cmd = Command(name=command_name, body=[], comment=None)
     expect('left paren', toks)
     for line_num, (typ, tok_contents) in toks:
         if typ == 'right paren':
-            return cmd
+            line_nums = range(start_line_num, line_num + 1)
+            return line_nums, cmd
         elif typ == 'left paren':
             raise ValueError('Unexpected left paren at line %s' % line_num)
         elif typ in ('word', 'string'):
@@ -110,7 +135,7 @@ scanner = re.Scanner([
 
 def tokenize_lines(lines):
     """
-    tokenize_cmake(lines) returns a list of (line_num, (token_type, token_contents))
+    Returns a list of (line_num, (token_type, token_contents))
     given a list of lines from a CMakeLists file.
     """
     for line_num, line in enumerate(lines, start=1):
