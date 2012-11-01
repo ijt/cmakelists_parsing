@@ -1,3 +1,4 @@
+from __future__ import print_function
 from collections import namedtuple
 import re
 import StringIO
@@ -42,7 +43,7 @@ def compose(tree, indent='    '):
     Returns the pretty-print string for tree
     with indentation given by the string indent.
     '''
-    return '\n'.join(compose_lines(tree.contents, indent))
+    return '\n'.join(compose_lines(tree.contents, indent)) + '\n'
 
 def compose_lines(tree_contents, indent):
     for item in tree_contents:
@@ -168,7 +169,7 @@ def main():
                 print(str(tree))
             else:
                 # Pretty print
-                print(compose(tree))
+                print(compose(tree), end='')
 
 if __name__ == '__main__':
     main()
