@@ -10,17 +10,17 @@ class ParsingTestCase(unittest.TestCase):
         self.maxDiff = None
 
     def test_parse_empty_raises_exception(self):
-    	self.assertEqual(File([]), parse(''))
+        self.assertEqual(File([]), parse(''))
 
     def test_parse_nonempty1(self):
-    	input = 'FIND_PACKAGE(ITK REQUIRED)'
-    	output = parse(input)
-    	expected = File([Command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')])])
-    	msg = '\nexpected\n%s\ngot\n%s' % (repr(expected), repr(output))
-    	self.assertEqual(expected, output, msg)
+        input = 'FIND_PACKAGE(ITK REQUIRED)'
+        output = parse(input)
+        expected = File([Command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')])])
+        msg = '\nexpected\n%s\ngot\n%s' % (repr(expected), repr(output))
+        self.assertEqual(expected, output, msg)
 
     def test_parse_nonempty2(self):
-    	input = '''
+        input = '''
 # Top level comment
 FIND_PACKAGE(ITK REQUIRED)
 INCLUDE(${ITK_USE_FILE})
@@ -30,50 +30,52 @@ TARGET_LINK_LIBRARIES(CastImageFilter # inline comment 1
 vtkHybrid   #inline comment 2
 ITKIO ITKBasicFilters ITKCommon
 )
-    	'''
+        '''
 
-    	output = parse(input)
+        output = parse(input)
 
-    	expected = File([
-    		CommentBlock(['# Top level comment']),
-    		Command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')]),
-    		Command('INCLUDE', [Arg('${ITK_USE_FILE}')]),
+        expected = File([
+            Comment('# Top level comment'),
+            Command('FIND_PACKAGE', [Arg('ITK'), Arg('REQUIRED')]),
+            Command('INCLUDE', [Arg('${ITK_USE_FILE}')]),
 
-    		Command('ADD_EXECUTABLE', [Arg('CastImageFilter'), Arg('CastImageFilter.cxx')]),
-    		Command('TARGET_LINK_LIBRARIES', [Arg('CastImageFilter'),
-    										  Comment('# inline comment 1'),
-    										  Arg('vtkHybrid'),
-    										  Comment('#inline comment 2'),
-    										  Arg('ITKIO'),
-    										  Arg('ITKBasicFilters'),
-    										  Arg('ITKCommon')])
-    		])
-    	msg = '\nexpected\n%s\ngot\n%s' % (expected, output)
-    	self.assertEqual(expected, output, msg)
+            Command('ADD_EXECUTABLE', [Arg('CastImageFilter'), Arg('CastImageFilter.cxx')]),
+            Command('TARGET_LINK_LIBRARIES', [Arg('CastImageFilter'),
+                                              Comment('# inline comment 1'),
+                                              Arg('vtkHybrid'),
+                                              Comment('#inline comment 2'),
+                                              Arg('ITKIO'),
+                                              Arg('ITKBasicFilters'),
+                                              Arg('ITKCommon')])
+            ])
+        msg = '\nexpected\n%s\ngot\n%s' % (expected, output)
+        self.assertEqual(expected, output, msg)
 
     def test_idempotency_of_parsing_and_unparsing(self):
-		input = '''\
+        input = '''\
 # Top level comment
 FIND_PACKAGE(ITK REQUIRED)
 INCLUDE(${ITK_USE_FILE})
 '''
-		round_trip = lambda s: compose(parse(s))
-		self.assertEqual(round_trip(input), round_trip(round_trip(input)))
+        round_trip = lambda s: compose(parse(s))
+        self.assertEqual(round_trip(input), round_trip(round_trip(input)))
 
     def test_invalid_format_raises_an_exception(self):
-		input = 'FIND_PACKAGE('
-		self.assertRaises(Exception, parse, input)
+        input = 'FIND_PACKAGE('
+        self.assertRaises(Exception, parse, input)
 
     def test_line_numbers_in_exceptions(self):
-		input = '''\
+        input = '''\
 FIND_PACKAGE(ITK)
 INCLUDE(
 '''
-		try:
-			parse(input)
-			self.fail('Expected an exception, but none was raised.')
-		except Exception as e:
-			self.assertTrue('line 2' in str(e))
+        try:
+            parse(input)
+            self.fail('Expected an exception, but none was raised.')
+        except Exception as e:
+            import pdb
+            pdb.set_trace()
+            self.assertTrue('line 2' in str(e))
 
     def test_arg_with_a_slash(self):
         tree = parse('include_directories (${HELLO_SOURCE_DIR}/Hello)')
@@ -82,7 +84,7 @@ INCLUDE(
             ])
         self.assertEqual(expected, tree)
 
-    def test_Command_with_no_args(self):
+    def test_command_with_no_args(self):
         tree = parse('cmd()')
         expected = File([Command('cmd', [])])
         self.assertEqual(expected, tree)
