@@ -4,7 +4,7 @@ import StringIO
 
 QuotedString = namedtuple('QuotedString', 'contents comments')
 _Arg = namedtuple('Arg', 'contents comments')
-_Command = namedtuple('Command', 'name body comments')
+_Command = namedtuple('Command', 'name body comment')
 BlankLine = namedtuple('BlankLine', '')
 File = namedtuple('File', 'contents')
 # TODO: if, else, endif, function, endfunction, macro, endmacro
@@ -25,7 +25,7 @@ def parse(s, path='<string>'):
     contents are assumed to have come from the named file.
     '''
     toks = tokenize_lines(s.splitlines())
-    return File(list(parseFile(toks)))
+    return File(list(parse_file(toks)))
 
 def strip_blanks(tree):
     return File([x for x in tree.contents if not isinstance(x, BlankLine)])
@@ -48,15 +48,19 @@ def compose_lines(tree_contents, indent):
                 yield line
 
 def command_to_lines(cmd):
-    yield cmd.name + '(' + ' '.join(map(arg_to_str, cmd.body)) + ')'
+    final_paren = '\n)' if cmd.body and cmd.body[-1].comments else ')'
+    yield cmd.name + '(' + ' '.join(map(arg_to_str, cmd.body)) + final_paren
 
 def arg_to_str(arg):
-    return arg.contents
+    comment_part = '  ' + '\n'.join(arg.comments) + '\n' if arg.comments else ''
+    return arg.contents + comment_part
 
-def parseFile(toks):
+def parse_file(toks):
     '''
-    parseFile(toks) yields top-level elements of the syntax tree for
+    parse_file(toks) yields top-level elements of the syntax tree for
     a CMakeLists file, given a generator of tokens from the file.
+
+    toks must really be a generator, not a list, for this to work.
     '''
     for line_num, (typ, tok_contents) in toks:
         if typ == 'comment':
@@ -64,9 +68,9 @@ def parseFile(toks):
         elif typ == 'blank line':
             yield BlankLine()
         elif typ == 'word':
-            yield parseCommand(line_num, tok_contents, toks)
+            yield parse_command(line_num, tok_contents, toks)
 
-def parseCommand(start_line_num, command_name, toks):
+def parse_command(start_line_num, command_name, toks):
     cmd = Command(name=command_name, body=[], comments=[])
     expect('left paren', toks)
     for line_num, (typ, tok_contents) in toks:

@@ -87,8 +87,8 @@ INCLUDE(
         self.assertEqual(expected, tree)
 
     def assertStringEqualIgnoreSpace(self, a, b):
-        a2 = ' '.join(a.split())
-        b2 = ' '.join(b.split())
+        a2 = ''.join(a.split())
+        b2 = ''.join(b.split())
         msg = '\nExpected\n%s\ngot\n%s\n(ignoring whitespace details)' % (a, b)
         self.assertEqual(a2, b2, msg)
 
@@ -103,17 +103,18 @@ some_Command (
     def test_comments_preserved(self):
         input = '''\
 # file comment
+# more about the file
 
-# comment above Command
-Command1 (VERSION 2.6) # inline comment for Command1
+# comment above Command1
+Command1(VERSION 2.6)  # inline comment for Command1
 
-Command2 (x  # inline comment about x
-    "y"      # inline comment about a quoted string "y"
+Command2(x  # inline comment about x
+    "y"  # inline comment about a quoted string "y"
     ) # inline comment for Command2
 '''
         output = compose(parse(input))
 
-        self.assertStringEqualIgnoreSpace(input, output)
+        self.assertMultiLineEqual(input, output)
 
     def test_multiline_string(self):
         s = '''
