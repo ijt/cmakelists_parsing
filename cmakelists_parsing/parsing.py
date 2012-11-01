@@ -39,8 +39,8 @@ def compose(tree, indent='    '):
 
 def compose_lines(tree_contents, indent):
     for item in tree_contents:
-        if isinstance(item, Comment):
-            yield item.contents
+        if isinstance(item, (Comment, str)):
+            yield item
         elif isinstance(item, BlankLine):
             yield ''
         elif isinstance(item, _Command):
