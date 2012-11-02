@@ -58,7 +58,7 @@ def compose_lines(tree_contents):
     """
     Yields pretty-printed lines of a CMakeLists file.
     """
-    tab = '    '
+    tab = '\t'
     level = 0
     for item in tree_contents:
         if isinstance(item, (Comment, str)):

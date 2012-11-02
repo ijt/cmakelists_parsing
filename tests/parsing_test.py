@@ -94,8 +94,8 @@ INCLUDE(
     def test_arg_comments_preserved(self):
         input = '''
 some_Command (
-    x  # inline comment about x
-    )
+	x  # inline comment about x
+	)
 '''
         output = str(parse(input))
 
@@ -108,8 +108,8 @@ some_Command (
 Command1(VERSION 2.6)  # inline comment for Command1
 
 Command2(x  # inline comment about x
-    "y"  # inline comment about a quoted string "y"
-    )  # inline comment for Command2
+	"y"  # inline comment about a quoted string "y"
+	)  # inline comment for Command2
 '''
         output = str(parse(input))
 
@@ -132,13 +132,13 @@ set (MY_STRING "%s")
     def test_ifs_indented(self):
         input = '''
 if(a)
-    if(b)
-        set(X 1)
-    endif()
+	if(b)
+		set(X 1)
+	endif()
 else(a)
-    if(c)
-        set(Y 2)
-    endif(c)
+	if(c)
+		set(Y 2)
+	endif(c)
 endif(a)
 '''
         self.assertMultiLineEqual(input, str(parse(input)))
@@ -146,7 +146,7 @@ endif(a)
     def test_macros_indented(self):
         input = '''
 macro(hello MESSAGE)
-    message(${MESSAGE})
+	message(${MESSAGE})
 endmacro(hello)  # call the macro with the string "hello world"
 hello("hello world")
 '''
@@ -155,7 +155,7 @@ hello("hello world")
     def test_functions_indented(self):
         input = '''
 function(hello MESSAGE)
-    message(${MESSAGE})
+	message(${MESSAGE})
 endfunction(hello)  # call the macro with the string "hello world"
 hello("hello world")
 '''
