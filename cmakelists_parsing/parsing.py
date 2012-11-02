@@ -35,6 +35,9 @@ class CMakeParseError(Exception):
     pass
 
 def prettify(s):
+    """
+    Returns the pretty-print of the contents of a CMakeLists file.
+    """
     return str(parse(s))
 
 def parse(s, path='<string>'):
@@ -43,22 +46,22 @@ def parse(s, path='<string>'):
     contents are assumed to have come from the
     file at the given path.
     '''
-    toks = tokenize(s)
-    nums_items = list(parse_file(toks))
+    nums_toks = tokenize(s)
+    nums_items = list(parse_file(nums_toks))
     nums_items = attach_comments_to_commands(nums_items)
-    items = [item for line_num, item in nums_items]
+    items = [item for _, item in nums_items]
     return File(items)
 
 def strip_blanks(tree):
     return File([x for x in tree if not isinstance(x, BlankLine)])
 
-def compose_lines(tree_contents):
+def compose_lines(tree):
     """
     Yields pretty-printed lines of a CMakeLists file.
     """
     tab = '\t'
     level = 0
-    for item in tree_contents:
+    for item in tree:
         if isinstance(item, (Comment, str)):
             yield level * tab + item
         elif isinstance(item, BlankLine):
