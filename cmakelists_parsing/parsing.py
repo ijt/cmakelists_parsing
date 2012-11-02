@@ -30,7 +30,7 @@ def parse(s, path='<string>'):
     contents are assumed to have come from the
     file at the given path.
     '''
-    toks = tokenize_lines(s.splitlines())
+    toks = tokenize(s)
     nums_items = list(parse_file(toks))
     nums_items = attach_comments_to_commands(nums_items)
     items = [item for line_num, item in nums_items]
@@ -83,14 +83,16 @@ def parse_file(toks):
 
     toks must really be a generator, not a list, for this to work.
     '''
+    prev_type = 'newline'
     for line_num, (typ, tok_contents) in toks:
         if typ == 'comment':
             yield ([line_num], Comment(tok_contents))
-        elif typ == 'blank line':
+        elif typ == 'newline' and prev_type == 'newline':
             yield ([line_num], BlankLine())
         elif typ == 'word':
             line_nums, cmd = parse_command(line_num, tok_contents, toks)
             yield (line_nums, cmd)
+        prev_type = typ
 
 def attach_comments_to_commands(nodes):
     return list_utils.merge_pairs(nodes, command_then_comment, attach_comment_to_command)
@@ -143,23 +145,23 @@ scanner = re.Scanner([
     (r"\(",                 lambda scanner, token: ("left paren", token)),
     (r"\)",                 lambda scanner, token: ("right paren", token)),
     (r'[^ \t\r\n()#"]+',    lambda scanner, token: ("word", token)),
+    (r'\n',                 lambda scanner, token: ("newline", token)),
     (r"\s+",                None), # skip other whitespace
 ])
 
-def tokenize_lines(lines):
+def tokenize(s):
     """
-    Returns a list of (line_num, (token_type, token_contents))
-    given a list of lines from a CMakeLists file.
+    Yields pairs of the form (line_num, (token_type, token_contents))
+    given a string containing the contents of a CMakeLists file.
     """
-    for line_num, line in enumerate(lines, start=1):
-        toks, remainder = scanner.scan(line)
-        if remainder != '':
-            msg = 'Unrecognized tokens at line %s: %s' % (line_num, remainder)
-            raise ValueError(msg)
-        if not toks:
-            yield line_num, ('blank line', '')
-        for t in toks:
-            yield line_num, t
+    toks, remainder = scanner.scan(s)
+    if remainder != '':
+        msg = 'Unrecognized tokens at line %s: %s' % (line_num, remainder)
+        raise ValueError(msg)
+    line_num = 1
+    for tok_type, tok_contents in toks:
+        yield line_num, (tok_type, tok_contents)
+        line_num += tok_contents.count('\n')
 
 def main():
     import argparse

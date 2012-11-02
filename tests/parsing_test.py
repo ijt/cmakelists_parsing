@@ -121,12 +121,12 @@ Command2(x  # inline comment about x
 string containing
 newlines
 '''
-        input = '''
+        input = '''\
 set (MY_STRING "%s")
 ''' % s
         tree = parse(input)
         expected = File([Command('set', [Arg('MY_STRING'),
-                                         QuotedString(s)])])
+                                         Arg('"' + s + '"')])])
         self.assertEqual(expected, tree)
 
     # TODO: test macros and functions
