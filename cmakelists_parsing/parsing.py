@@ -1,7 +1,5 @@
-from __future__ import print_function
 from collections import namedtuple
 import re
-import StringIO
 
 from cmakelists_parsing import list_utils
 
@@ -172,34 +170,3 @@ def tokenize(s):
         yield line_num, (tok_type, tok_contents.strip())
         line_num += tok_contents.count('\n')
 
-def main():
-    # Parse arguments
-    import argparse
-    import sys
-    parser = argparse.ArgumentParser(description='Pretty-print CMakeLists files.')
-    parser.add_argument('files', type=str, nargs='*',
-                        help='files to pretty print (default is stdin)')
-    parser.add_argument('-t', '--tree', action='store_true',
-                        help='print out the syntax trees')
-    args = parser.parse_args()
-
-    # Gather files
-    filenames = args.files
-    files = [('<stdin>', sys.stdin)]
-    if filenames:
-        files = [(name, open(name)) for name in filenames]
-
-    # Process files
-    for (name, file) in files:
-        with file:
-            input = file.read()
-            tree = parse(input, path=name)
-            if args.tree:
-                # Print out AST
-                print(repr(tree))
-            else:
-                # Pretty print
-                print(str(tree), end='')
-
-if __name__ == '__main__':
-    main()

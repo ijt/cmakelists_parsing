@@ -23,7 +23,7 @@ setup(
     include_package_data=True,
     entry_points = {
         'console_scripts': [
-            'cmake_pprint = cmakelists_parsing.parsing:main',
+            'cmake_pprint = cmakelists_parsing.cmake_pprint:main',
         ]
     })
 
