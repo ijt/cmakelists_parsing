@@ -143,11 +143,20 @@ endif(a)
 '''
         self.assertMultiLineEqual(input, str(parse(input)))
 
-    def test_functions_indented(self):
+    def test_macros_indented(self):
         input = '''
 macro(hello MESSAGE)
     message(${MESSAGE})
 endmacro(hello)  # call the macro with the string "hello world"
+hello("hello world")
+'''
+        self.assertUnchangedByPrettyPrinting(input)
+
+    def test_functions_indented(self):
+        input = '''
+function(hello MESSAGE)
+    message(${MESSAGE})
+endfunction(hello)  # call the macro with the string "hello world"
 hello("hello world")
 '''
         self.assertUnchangedByPrettyPrinting(input)

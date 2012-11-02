@@ -67,12 +67,12 @@ def compose_lines(tree_contents):
             yield ''
         elif isinstance(item, _Command):
             name = item.name.lower()
-            if name in ('endif', 'else'):
+            if name in ('endfunction', 'endmacro', 'endif', 'else'):
                 level -= 1
             for i, line in enumerate(command_to_lines(item)):
                 offset = 1 if i > 0 else 0
                 yield (level + offset) * tab + line
-            if name in ('if', 'else'):
+            if name in ('function', 'macro', 'if', 'else'):
                 level += 1
 
 def command_to_lines(cmd):
