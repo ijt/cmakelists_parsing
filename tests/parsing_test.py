@@ -110,7 +110,7 @@ Command1(VERSION 2.6)  # inline comment for Command1
 
 Command2(x  # inline comment about x
     "y"  # inline comment about a quoted string "y"
-    ) # inline comment for Command2
+    )  # inline comment for Command2
 '''
         output = compose(parse(input))
 
@@ -129,6 +129,7 @@ set (MY_STRING "%s")
                                          QuotedString(s)])])
         self.assertEqual(expected, tree)
 
+    # TODO: test macros and functions
     def test_ifs_indented(self):
         input = '''
 if(a)

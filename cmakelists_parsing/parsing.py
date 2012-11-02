@@ -26,8 +26,9 @@ class CMakeParseError(Exception):
 
 def parse(s, path='<string>'):
     '''
-    parse(s, filename) parses a string s in CMakeLists format whose
-    contents are assumed to have come from the named file.
+    Parses a string s in CMakeLists format whose
+    contents are assumed to have come from the
+    file at the given path.
     '''
     toks = tokenize_lines(s.splitlines())
     nums_items = list(parse_file(toks))
@@ -46,6 +47,9 @@ def compose(tree, tab='    '):
     return '\n'.join(compose_lines(tree.contents, tab)) + '\n'
 
 def compose_lines(tree_contents, tab):
+    """
+    Yields pretty-printed lines of a CMakeLists file.
+    """
     level = 0
     for item in tree_contents:
         if isinstance(item, (Comment, str)):
@@ -56,15 +60,17 @@ def compose_lines(tree_contents, tab):
             name = item.name.lower()
             if name in ('endif', 'else'):
                 level -= 1
-            for line in command_to_lines(item):
-                yield level * tab + line
+            for i, line in enumerate(command_to_lines(item)):
+                offset = 1 if i > 0 else 0
+                yield (level + offset) * tab + line
             if name in ('if', 'else'):
                 level += 1
 
 def command_to_lines(cmd):
-    final_paren = '\n)' if cmd.body and cmd.body[-1].comments else ')'
+    final_paren = ')' if cmd.body and cmd.body[-1].comments else ')'
     comment_part = '  ' + cmd.comment if cmd.comment else ''
-    yield cmd.name + '(' + ' '.join(map(arg_to_str, cmd.body)) + final_paren + comment_part
+    result = cmd.name + '(' + ' '.join(map(arg_to_str, cmd.body)) + final_paren + comment_part
+    return [l.strip() for l in result.splitlines()]
 
 def arg_to_str(arg):
     comment_part = '  ' + '\n'.join(arg.comments) + '\n' if arg.comments else ''
