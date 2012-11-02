@@ -45,7 +45,6 @@ ITKIO ITKBasicFilters ITKCommon
                                               Arg('ITKIO'),
                                               Arg('ITKBasicFilters'),
                                               Arg('ITKCommon')]),
-            BlankLine()
             ])
         msg = '\nexpected\n%s\ngot\n%s' % (expected, output)
         self.assertEqual(expected, output, msg)

@@ -121,7 +121,7 @@ def parse_command(start_line_num, command_name, toks):
         elif typ in ('word', 'string'):
             cmd.body.append(Arg(tok_contents, []))
         elif typ == 'comment':
-            c = Comment(tok_contents)
+            c = tok_contents
             if cmd.body:
                 cmd.body[-1].comments.append(c)
             else:
@@ -160,7 +160,7 @@ def tokenize(s):
         raise ValueError(msg)
     line_num = 1
     for tok_type, tok_contents in toks:
-        yield line_num, (tok_type, tok_contents)
+        yield line_num, (tok_type, tok_contents.strip())
         line_num += tok_contents.count('\n')
 
 def main():
