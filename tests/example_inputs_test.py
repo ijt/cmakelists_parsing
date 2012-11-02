@@ -14,7 +14,7 @@ def yield_examples():
 
 class ExamplesTestCase(unittest.TestCase):
     def test_idempotency_of_parse_unparse(self):
-        round_trip = lambda s, path='<string>': cmp.compose(cmp.parse(s, path))
+        round_trip = lambda s, path='<string>': str(cmp.parse(s, path))
         for path, contents in yield_examples():
             self.assertEqual(round_trip(contents, path),
                              round_trip(round_trip(contents, path)),
@@ -23,6 +23,6 @@ class ExamplesTestCase(unittest.TestCase):
     def test_tree_is_unchanged(self):
         for path, contents in yield_examples():
             expected = cmp.parse(contents, path)
-            actual = cmp.parse(cmp.compose(cmp.parse(contents, path)))
+            actual = cmp.parse(str(cmp.parse(contents, path)))
             msg = 'Failed on %s.\nExpected\n%s\n\nGot\n%s' % (path, expected, actual)
             self.assertEqual(expected, actual, msg)

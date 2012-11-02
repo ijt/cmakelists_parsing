@@ -3,7 +3,7 @@
 import unittest
 
 from cmakelists_parsing.parsing import (
-    File, Command, Comment, BlankLine, Arg, parse, compose)
+    File, Command, Comment, BlankLine, Arg, parse, prettify)
 
 class ParsingTestCase(unittest.TestCase):
     def setUp(self):
@@ -55,7 +55,7 @@ ITKIO ITKBasicFilters ITKCommon
 FIND_PACKAGE(ITK REQUIRED)
 INCLUDE(${ITK_USE_FILE})
 '''
-        round_trip = lambda s: compose(parse(s))
+        round_trip = lambda s: str(parse(s))
         self.assertEqual(round_trip(input), round_trip(round_trip(input)))
 
     def test_invalid_format_raises_an_exception(self):
@@ -97,7 +97,7 @@ some_Command (
     x  # inline comment about x
     )
 '''
-        output = compose(parse(input))
+        output = str(parse(input))
 
     def test_comments_preserved(self):
         input = '''\
@@ -111,7 +111,7 @@ Command2(x  # inline comment about x
     "y"  # inline comment about a quoted string "y"
     )  # inline comment for Command2
 '''
-        output = compose(parse(input))
+        output = str(parse(input))
 
         self.assertMultiLineEqual(input, output)
 
@@ -141,7 +141,19 @@ else(a)
     endif(c)
 endif(a)
 '''
-        self.assertMultiLineEqual(input, compose(parse(input)))
+        self.assertMultiLineEqual(input, str(parse(input)))
+
+    def test_functions_indented(self):
+        input = '''
+macro(hello MESSAGE)
+    message(${MESSAGE})
+endmacro(hello)  # call the macro with the string "hello world"
+hello("hello world")
+'''
+        self.assertUnchangedByPrettyPrinting(input)
+
+    def assertUnchangedByPrettyPrinting(self, input):
+        self.assertMultiLineEqual(input, prettify(input))
 
 if __name__ == '__main__':
     unittest.main()

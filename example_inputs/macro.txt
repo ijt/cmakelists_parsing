@@ -4,7 +4,3 @@ macro(hello MESSAGE)
 endmacro(hello) 
 # call the macro with the string "hello world" 
 hello("hello world") 
-# define a function hello 
-function(hello MESSAGE)
-    message(${MESSAGE}) 
-endfunction(hello)

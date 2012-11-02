@@ -9,8 +9,20 @@ QuotedString = namedtuple('QuotedString', 'contents comments')
 _Arg = namedtuple('Arg', 'contents comments')
 _Command = namedtuple('Command', 'name body comment')
 BlankLine = namedtuple('BlankLine', '')
-File = namedtuple('File', 'contents')
-# TODO: if, else, endif, function, endfunction, macro, endmacro
+
+class File(list):
+    """Top node of the syntax tree for a CMakeLists file."""
+
+    def __str__(self):
+        '''
+        Returns the pretty-print string for tree
+        with indentation given by the string tab.
+        '''
+        return '\n'.join(compose_lines(self)) + '\n'
+
+    def __repr__(self):
+        return 'File(' + repr(list(self)) + ')'
+
 class Comment(str):
     def __repr__(self):
         return 'Comment(' + str(self) + ')'
@@ -23,6 +35,9 @@ def Command(name, body, comment=None):
 
 class CMakeParseError(Exception):
     pass
+
+def prettify(s):
+    return str(parse(s))
 
 def parse(s, path='<string>'):
     '''
@@ -37,19 +52,13 @@ def parse(s, path='<string>'):
     return File(items)
 
 def strip_blanks(tree):
-    return File([x for x in tree.contents if not isinstance(x, BlankLine)])
+    return File([x for x in tree if not isinstance(x, BlankLine)])
 
-def compose(tree, tab='    '):
-    '''
-    Returns the pretty-print string for tree
-    with indentation given by the string tab.
-    '''
-    return '\n'.join(compose_lines(tree.contents, tab)) + '\n'
-
-def compose_lines(tree_contents, tab):
+def compose_lines(tree_contents):
     """
     Yields pretty-printed lines of a CMakeLists file.
     """
+    tab = '    '
     level = 0
     for item in tree_contents:
         if isinstance(item, (Comment, str)):
@@ -164,6 +173,7 @@ def tokenize(s):
         line_num += tok_contents.count('\n')
 
 def main():
+    # Parse arguments
     import argparse
     import sys
     parser = argparse.ArgumentParser(description='Pretty-print CMakeLists files.')
@@ -172,18 +182,24 @@ def main():
     parser.add_argument('-t', '--tree', action='store_true',
                         help='print out the syntax trees')
     args = parser.parse_args()
+
+    # Gather files
     filenames = args.files
-    files = (open(f) for f in filenames) if filenames else [sys.stdin]
-    for f in files:
-        with f:
-            input = f.read()
-            tree = parse(input)
+    files = [('<stdin>', sys.stdin)]
+    if filenames:
+        files = [(name, open(name)) for name in filenames]
+
+    # Process files
+    for (name, file) in files:
+        with file:
+            input = file.read()
+            tree = parse(input, path=name)
             if args.tree:
                 # Print out AST
-                print(str(tree))
+                print(repr(tree))
             else:
                 # Pretty print
-                print(compose(tree), end='')
+                print(str(tree), end='')
 
 if __name__ == '__main__':
     main()
