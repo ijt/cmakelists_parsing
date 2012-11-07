@@ -55,7 +55,7 @@ def parse(s, path='<string>'):
 def strip_blanks(tree):
     return File([x for x in tree if not isinstance(x, BlankLine)])
 
-def compose_lines(tree):
+def compose_lines(tree, max_width=79):
     """
     Yields pretty-printed lines of a CMakeLists file.
     """
@@ -72,14 +72,23 @@ def compose_lines(tree):
                 level -= 1
             for i, line in enumerate(command_to_lines(item)):
                 offset = 1 if i > 0 else 0
-                yield (level + offset) * tab + line
+                line2 = (level + offset) * tab + line
+                if len(line2) <= max_width:
+                    yield line2
+                else:
+                    command_to_lines
+                    # Line is too long. Try again.
+                    for _, (ty, contents) in tokenize(line):
+                        yield (level + offset) * tab + contents
+
             if name in ('function', 'macro', 'if', 'else'):
                 level += 1
 
-def command_to_lines(cmd):
+# FIXME: Make this split into more lines if the result would be too wide.
+def command_to_lines(cmd, sep):
     final_paren = ')' if cmd.body and cmd.body[-1].comments else ')'
     comment_part = '  ' + cmd.comment if cmd.comment else ''
-    result = cmd.name + '(' + ' '.join(map(arg_to_str, cmd.body)) + final_paren + comment_part
+    result = cmd.name + '(' + sep.join(map(arg_to_str, cmd.body)) + final_paren + comment_part
     return [l.strip() for l in result.splitlines()]
 
 def arg_to_str(arg):
