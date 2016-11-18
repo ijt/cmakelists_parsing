@@ -18,8 +18,6 @@ setup(
     packages=find_packages(),
     zip_safe=False,
     install_requires=['pyPEG2'],
-    tests_require=['nose'],
-    test_suite='nose.collector',
     include_package_data=True,
     entry_points = {
         'console_scripts': [
