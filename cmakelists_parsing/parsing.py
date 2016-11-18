@@ -76,7 +76,6 @@ def compose_lines(tree, max_width=79):
                 if len(line2) <= max_width:
                     yield line2
                 else:
-                    command_to_lines
                     # Line is too long. Try again.
                     for _, (ty, contents) in tokenize(line):
                         yield (level + offset) * tab + contents
