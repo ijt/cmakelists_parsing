@@ -84,7 +84,7 @@ def compose_lines(tree, max_width=79):
                 level += 1
 
 # FIXME: Make this split into more lines if the result would be too wide.
-def command_to_lines(cmd, sep=''):
+def command_to_lines(cmd, sep=' '):
     final_paren = ')' if cmd.body and cmd.body[-1].comments else ')'
     comment_part = '  ' + cmd.comment if cmd.comment else ''
     result = cmd.name + '(' + sep.join(map(arg_to_str, cmd.body)) + final_paren + comment_part
