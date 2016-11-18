@@ -12,7 +12,7 @@ setup(
     name='cmakelists_parsing',
     version='0.3',
     author='Issac Trotts',
-    author_email='itrotts@willowgarage.com',
+    author_email='issac.trotts@gmail.com',
     url='http://github.com/ijt/cmakelists_parsing',
     description='Parser for CMakeLists.txt files',
     packages=find_packages(),
