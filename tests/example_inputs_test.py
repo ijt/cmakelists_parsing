@@ -16,6 +16,7 @@ class ExamplesTestCase(unittest.TestCase):
     def test_idempotency_of_parse_unparse(self):
         round_trip = lambda s, path='<string>': str(cmp.parse(s, path))
         for path, contents in yield_examples():
+            print 'Testing on %s' % path
             self.assertEqual(round_trip(contents, path),
                              round_trip(round_trip(contents, path)),
                              'Failed on %s' % path)
