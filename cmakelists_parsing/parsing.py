@@ -126,12 +126,15 @@ def attach_comment_to_command(lnums_command, lnums_comment):
 def parse_command(start_line_num, command_name, toks):
     cmd = Command(name=command_name, body=[], comment=None)
     expect('left paren', toks)
+    paren_sum = 1
     for line_num, (typ, tok_contents) in toks:
-        if typ == 'right paren':
-            line_nums = range(start_line_num, line_num + 1)
-            return line_nums, cmd
+        if typ == 'right paren':            
+            paren_sum -= 1
+            if paren_sum == 0:
+                line_nums = range(start_line_num, line_num + 1)
+                return line_nums, cmd
         elif typ == 'left paren':
-            raise ValueError('Unexpected left paren at line %s' % line_num)
+            paren_sum += 1            
         elif typ in ('word', 'string'):
             cmd.body.append(Arg(tok_contents, []))
         elif typ == 'comment':
