@@ -124,7 +124,7 @@ def attach_comment_to_command(lnums_command, lnums_comment):
     return command_lines, Command(command.name, command.body[:], comment)
 
 def parse_command(start_line_num, command_name, toks):
-    cmd = Command(name=command_name, body=[], comment=None)
+    cmd = Command(name=command_name, body=[], comment=[])
     expect('left paren', toks)
     for line_num, (typ, tok_contents) in toks:
         if typ == 'right paren':
@@ -139,7 +139,7 @@ def parse_command(start_line_num, command_name, toks):
             if cmd.body:
                 cmd.body[-1].comments.append(c)
             else:
-                cmd.comments.append(c)
+                cmd.comment.append(c)
     msg = 'File ended while processing command "%s" started at line %s' % (
         command_name, start_line_num)
     raise CMakeParseError(msg)
